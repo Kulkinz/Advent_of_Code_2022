@@ -5,6 +5,7 @@ using namespace std;
 #include <fstream>
 #include <string>
 #include <vector>
+#include "Helpers/HelperFunctions.h"
 
 void calculatePriorities(int &ans, vector<char> &chars);
 int main() {
@@ -30,11 +31,7 @@ int main() {
     vector<char> charHalf(half.begin(), half.end());
     vector<char> charOtherHalf(otherHalf.begin(), otherHalf.end());
 
-    sort(charHalf.begin(), charHalf.end());
-    sort(charOtherHalf.begin(), charOtherHalf.end());
-
-    vector<char> result;
-    set_intersection(charHalf.begin(), charHalf.end(), charOtherHalf.begin(), charOtherHalf.end(), back_inserter(result));
+    vector<char> result = get_intersection(charHalf, charOtherHalf);
 
     duplicates.push_back(result[0]);
 
@@ -61,14 +58,8 @@ int main() {
     vector<char> charB(lineB.begin(), lineB.end());
     vector<char> charC(lineC.begin(), lineC.end());
 
-    sort(charA.begin(), charA.end());
-    sort(charB.begin(), charB.end());
-    sort(charC.begin(), charC.end());
-
-    vector<char> result;
-    set_intersection(charA.begin(), charA.end(), charB.begin(), charB.end(), back_inserter(result));
-    vector<char> finalResult;
-    set_intersection(result.begin(), result.end(), charC.begin(), charC.end(), back_inserter(finalResult));
+    vector<char> result = get_intersection(charA, charB);
+    vector<char> finalResult = get_intersection(result, charC);
 
     duplicates.push_back(finalResult[0]);
 

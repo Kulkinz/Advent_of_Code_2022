@@ -5,8 +5,7 @@
 
 // Taken from https://www.techiedelight.com/split-string-cpp-using-delimiter/
 void tokenize(std::string const &str, const char delim,
-              std::vector<std::string> &out)
-{
+              std::vector<std::string> &out) {
   size_t start;
   size_t end = 0;
 
