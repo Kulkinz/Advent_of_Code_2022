@@ -27,13 +27,16 @@ int main() {
     string half = s.substr(0, s.length()/2);
     string otherHalf = s.substr(s.length()/2);
 
-    size_t found = half.find_first_not_of(otherHalf);
-    while (found != string::npos) {
-      half.erase(found, 1);
-      found = half.find_first_not_of(otherHalf);
-    }
+    vector<char> charHalf(half.begin(), half.end());
+    vector<char> charOtherHalf(otherHalf.begin(), otherHalf.end());
 
-    duplicates.push_back(half[0]); // eliminates duplicates
+    sort(charHalf.begin(), charHalf.end());
+    sort(charOtherHalf.begin(), charOtherHalf.end());
+
+    vector<char> result;
+    set_intersection(charHalf.begin(), charHalf.end(), charOtherHalf.begin(), charOtherHalf.end(), back_inserter(result));
+
+    duplicates.push_back(result[0]);
 
     it++;
   }
@@ -53,16 +56,21 @@ int main() {
     string lineA = *it;
     string lineB = *(it+1);
     string lineC = *(it+2);
-    string sumOfLines = "";
 
-    size_t found = lineA.find_first_of(lineB);
-    while (found != string::npos) {
-      sumOfLines += lineA[found];
-      lineA.erase(found, 1);
-      found = lineA.find_first_of(lineB);
-    }
-    found = sumOfLines.find_first_of(lineC);
-    duplicates.push_back(sumOfLines[found]);
+    vector<char> charA(lineA.begin(), lineA.end());
+    vector<char> charB(lineB.begin(), lineB.end());
+    vector<char> charC(lineC.begin(), lineC.end());
+
+    sort(charA.begin(), charA.end());
+    sort(charB.begin(), charB.end());
+    sort(charC.begin(), charC.end());
+
+    vector<char> result;
+    set_intersection(charA.begin(), charA.end(), charB.begin(), charB.end(), back_inserter(result));
+    vector<char> finalResult;
+    set_intersection(result.begin(), result.end(), charC.begin(), charC.end(), back_inserter(finalResult));
+
+    duplicates.push_back(finalResult[0]);
 
     it += 3;
   }
