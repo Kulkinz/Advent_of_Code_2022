@@ -2,13 +2,10 @@
 using namespace std;
 
 #include <iostream>
-#include <fstream>
 #include <string>
 #include <vector>
-#include <stack>
 #include "Helpers/HelperFunctions.h"
 
-bool uniqueCharacters(string str);
 int main() {
   cout << "Day 6" << endl;
   ifstream file(R"(C:\Users\gwen\Documents\2_Programming\Advent of Code\Advent of Code 2022\inputs\day6.txt)");
@@ -19,7 +16,6 @@ int main() {
   string input;
 
   while (getline(file, str)) {
-//    input.push_back(str);
     input = str;
   }
 
@@ -53,16 +49,4 @@ int main() {
   }
   cout << "Part 2: " << data << " Ans: " << ans2 << endl;
   return 0;
-}
-
-bool uniqueCharacters(string str) {
-
-  for (auto &it1 : str) {
-    for (auto &it2 : str) {
-      if (it1 == it2 && &it1 != &it2) {
-        return false;
-      }
-    }
-  }
-  return true;
 }

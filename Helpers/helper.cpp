@@ -1,5 +1,6 @@
 #include <string>
 #include <vector>
+#include <set>
 
 #include "HelperFunctions.h"
 
@@ -14,4 +15,12 @@ void tokenize(std::string const &str, const char delim,
     end = str.find(delim, start);
     out.push_back(str.substr(start, end - start));
   }
+}
+
+bool uniqueCharacters(string str) {
+  set<char> char_set;
+  for(char c : str) {
+    char_set.insert(c);
+  }
+  return char_set.size() == str.size();
 }

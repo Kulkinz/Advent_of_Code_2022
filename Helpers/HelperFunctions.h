@@ -16,4 +16,6 @@ template<typename C> C get_intersection( C &a, C &b ) {
   return result;
 }
 
+bool uniqueCharacters(string str);
+
 
