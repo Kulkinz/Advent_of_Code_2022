@@ -12,11 +12,19 @@ class Item {
 
  protected:
   string name;
-  Item* parent = nullptr;
+  int size;
+  Item* parent;
  public:
-  virtual int getSize() {return 0;};
-  virtual int getLessThan100000() {return 0;}
-  virtual Item* getToDelete(int target) {return nullptr;}
+  Item(string name, int size, Item* parent) {
+    this->name = std::move(name);
+    this->size = size;
+    this->parent = parent;
+  }
+  virtual int getSize() {
+    return size;
+  }
+  virtual int getLessThan100000Sum() { return 0; }
+  virtual Item* getToDelete(int target) { return nullptr; }
   Item* getParent() {
     return parent;
   }
@@ -33,23 +41,28 @@ class Directory : public Item {
   map<string, Item*> contained;
 
  public:
-  Directory(string name) {
-    this->name = std::move(name);
+  Directory(string name) : Item(std::move(name), 0, nullptr) {
   }
-  int getSize() {
-    int totalSize = 0;
+  int getSize() override {
 
-    for (auto &it : contained) {
-      totalSize += it.second->getSize();
+    if (size == 0) {
+      int totalSize = 0;
+
+      for (auto &it : contained) {
+        totalSize += it.second->getSize();
+      }
+
+      size = totalSize;
     }
-    return totalSize;
+
+    return size;
   }
-  int getLessThan100000() {
+  int getLessThan100000Sum() override {
 
     int sum = 0;
 
     for (auto &it : contained) {
-      sum += it.second->getLessThan100000();
+      sum += it.second->getLessThan100000Sum();
     }
 
     int size = getSize();
@@ -60,14 +73,14 @@ class Directory : public Item {
 
     return sum;
   }
-  Item* findChild(string name) {
+  Item* findChild(const string& name) {
     return contained[name];
   }
   void addChild(string &name, Item *item) {
     contained[name] = item;
     item->setParent(this);
   }
-  Item* getToDelete(int target) {
+  Item* getToDelete(int target) override {
 
     Item* toDelete = nullptr;
 
@@ -102,24 +115,8 @@ class Directory : public Item {
 
 class File : public Item {
 
- private:
-  int size;
  public:
-  File(int size, string name) {
-    this->size = size;
-    this->name = std::move(name);
-  }
-  int getSize() {
-    return size;
-  }
-  int getLessThan100000() {
-
-    return 0;
-  }
-  Item* getToDelete(int target) {
-    return nullptr;
-
-  }
+  File(int size, string name) : Item(std::move(name), size, nullptr) { }
 };
 
 
@@ -163,7 +160,7 @@ int main() {
     }
   }
 
-  cout << "Part 1: " << root->getLessThan100000() << endl;
+  cout << "Part 1: " << root->getLessThan100000Sum() << endl;
 
   int totalSize = root->getSize();
 
@@ -172,7 +169,6 @@ int main() {
   Item *selected = root->getToDelete(requiredDelete);
 
   cout << "Part 2: " << selected->getName() << ":" << selected->getSize() << endl;
-//  cout << requiredDelete << endl;
 
 
   return 0;
