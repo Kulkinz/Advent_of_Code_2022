@@ -3,6 +3,9 @@ project(Advent_of_Code_2022)
 
 set(CMAKE_CXX_STANDARD 20)
 
+MATH(EXPR stack_size "16 * 1024 * 1024 * 1024") # 16 Gb
+set(CMAKE_EXE_LINKER_FLAGS "-Wl,--stack,${stack_size}")
+
 add_subdirectory(Helpers)
 list(APPEND EXTRA_LIBS Helpers)
 list(APPEND EXTRA_INCLUDES "${PROJECT_SOURCE_DIR}/Helpers")
@@ -21,4 +24,5 @@ add_executable(Day11 day11.cpp Helpers/helper.cpp)
 add_executable(Day12 day12.cpp Helpers/helper.cpp)
 add_executable(Day13 day13.cpp Helpers/helper.cpp)
 add_executable(Day14 day14.cpp Helpers/helper.cpp)
+add_executable(Day15 day15.cpp Helpers/helper.cpp)
 add_executable(Main main.cpp)
