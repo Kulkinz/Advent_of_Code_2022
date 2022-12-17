@@ -21,6 +21,12 @@ std::pair<T,U> operator+(const std::pair<T,U> & l,const std::pair<T,U> & r) {
 
 vector<bitset<WIDTHPLUSWALL>> cave;
 
+//struct state {
+//  int xPos;
+//  int yRelative;
+//  int gustIndex;
+//};
+
 class rock {
  private:
 
@@ -112,6 +118,9 @@ class rock {
   int getHighestPointRock() {
     return origin.second - 1 + height;
   }
+  pair<int, int> getOrigin() {
+    return origin;
+  }
 };
 
 int main() {
@@ -140,7 +149,9 @@ int main() {
 
   auto it = str.begin();
 
-  for (int i = 0; i < 2022; i++) {
+  int i = 0;
+
+  for (; i < 2022; i++) {
 
     int amountToAdd = gap - (cave.size() - (highestPoint + 1));
 
@@ -169,11 +180,149 @@ int main() {
     }
 
     highestPoint = max(highestPoint, curr->getHighestPointRock());
+
     rocks.push(curr);
   }
 
-  cout << highestPoint << endl;
+  cout << "Part 1: " << highestPoint << endl;
 
+  for (; i < 20220; i++) {
+
+    int amountToAdd = gap - (cave.size() - (highestPoint + 1));
+
+    for (int j = 0; j < amountToAdd; j++) {
+      cave.push_back(row);
+    }
+
+    rock* curr = rocks.front();
+    rocks.pop();
+    curr->resetOrigin(highestPoint);
+
+    bool hasLanded = false;
+    while (!hasLanded) {
+      if (*it == '>') { // right
+        curr->moveRight();
+      } else { // left
+        curr->moveLeft();
+      }
+
+      hasLanded = curr->moveDown();
+
+      it++;
+      if (it == str.end()) {
+        it = str.begin();
+      }
+    }
+
+    highestPoint = max(highestPoint, curr->getHighestPointRock());
+
+    rocks.push(curr);
+  }
+
+  int highestPointBefore = highestPoint;
+  int amountOfRocksBefore = i;
+
+  vector<bitset<WIDTHPLUSWALL>> match;
+
+  for (int spot = highestPoint; spot > highestPoint - 8; spot--) {
+    match.push_back(cave[spot]);
+  }
+
+  auto matchIt = match.begin();
+
+  int amountNewRocks = 0;
+
+  while (matchIt != match.end()) {
+
+    matchIt = match.begin();
+
+    int amountToAdd = gap - (cave.size() - (highestPoint + 1));
+
+    for (int j = 0; j < amountToAdd; j++) {
+      cave.push_back(row);
+    }
+
+    rock* curr = rocks.front();
+    rocks.pop();
+    curr->resetOrigin(highestPoint);
+
+    bool hasLanded = false;
+    while (!hasLanded) {
+      if (*it == '>') { // right
+        curr->moveRight();
+      } else { // left
+        curr->moveLeft();
+      }
+
+      hasLanded = curr->moveDown();
+
+      it++;
+      if (it == str.end()) {
+        it = str.begin();
+      }
+    }
+    amountNewRocks++;
+
+    highestPoint = max(highestPoint, curr->getHighestPointRock());
+
+    for (int j = highestPoint; matchIt != match.end(); j--) {
+      if (cave[j] != *matchIt) {
+        break;
+      } else {
+        matchIt++;
+      }
+    }
+
+    rocks.push(curr);
+  }
+
+  int changeInHeight = highestPoint - highestPointBefore;
+  // change in height for every amountNewRocks of rocks
+
+  long long int amountAfterStart = 1000000000000 - i;
+  long long int howManyTimesLoops = amountAfterStart / amountNewRocks;
+  long long int howMuchLeft = amountAfterStart % amountNewRocks;
+
+  long long int accumulative = highestPointBefore + changeInHeight*howManyTimesLoops;
+
+  long long int finalHighestPointRef = highestPoint;
+
+  for (int k = 0; k < howMuchLeft; k++) {
+    int amountToAdd = gap - (cave.size() - (highestPoint + 1));
+
+    for (int j = 0; j < amountToAdd; j++) {
+      cave.push_back(row);
+    }
+
+    rock* curr = rocks.front();
+    rocks.pop();
+    curr->resetOrigin(highestPoint);
+
+    bool hasLanded = false;
+    while (!hasLanded) {
+      if (*it == '>') { // right
+        curr->moveRight();
+      } else { // left
+        curr->moveLeft();
+      }
+
+      hasLanded = curr->moveDown();
+
+      it++;
+      if (it == str.end()) {
+        it = str.begin();
+      }
+    }
+
+    highestPoint = max(highestPoint, curr->getHighestPointRock());
+
+    rocks.push(curr);
+  }
+  long long int finalHeightChange = highestPoint - finalHighestPointRef;
+
+  accumulative += finalHeightChange;
+
+  cout << "Part 2: " << accumulative << endl;
 
   return 0;
 }
