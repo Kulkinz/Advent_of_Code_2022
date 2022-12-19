@@ -47,19 +47,19 @@ struct available {
 
 namespace std {
 template<>
-  struct hash<available> {
-    std::size_t operator()(const available &k) const {
-      using std::hash;
-      return (((hash<int>()(k.ore) & 0b11111111)
-          & ((hash<int>()(k.clay) & 0b11111111) << 8)
-          & ((hash<int>()(k.obsidian) & 0b11111111) << 16)
-          & ((hash<int>()(k.geode) & 0b11111111) << 24)
-          & ((hash<int>()(k.oreMachine) & 0b11111111) << 32)
-          & ((hash<int>()(k.clayMachine) & 0b11111111) << 40)
-          & ((hash<int>()(k.obsidianMachine) & 0b11111111) << 48)
-          & ((hash<int>()(k.geodeMachine) & 0b11111111) << 56)));
-    }
-  };
+struct hash<available> {
+  std::size_t operator()(const available &k) const {
+    using std::hash;
+    return (((hash<int>()(k.ore) & 0b11111111)
+        & ((hash<int>()(k.clay) & 0b11111111) << 8)
+        & ((hash<int>()(k.obsidian) & 0b11111111) << 16)
+        & ((hash<int>()(k.geode) & 0b11111111) << 24)
+        & ((hash<int>()(k.oreMachine) & 0b11111111) << 32)
+        & ((hash<int>()(k.clayMachine) & 0b11111111) << 40)
+        & ((hash<int>()(k.obsidianMachine) & 0b11111111) << 48)
+        & ((hash<int>()(k.geodeMachine) & 0b11111111) << 56)));
+  }
+};
 }
 
 int main() {
@@ -80,9 +80,9 @@ int main() {
                            stoi(out[21]),
                            stoi(out[27]),
                            stoi(out[30]) });
-    
+
   }
-  
+
   int acc = 0;
 
   for (auto &bp : blueprints) {
@@ -93,133 +93,101 @@ int main() {
     maxOreRequired = max(maxOreRequired, bp.obsidianCostOre);
     maxOreRequired = max(maxOreRequired, bp.geodeCostOre);
 
-    for (int i = 1; i <= 24; ++i) {
-      cout << "== Minute " << i << " ==" << endl;
+    int maxGeode = 0;
 
+    queue<available> currQueue;
+    queue<available> next;
+//    unordered_map<available, bool> seen;
 
-      bool buildGeode = false;
-      bool buildObsidian = false;
-      bool buildClay = false;
-      bool buildOre = false;
+    currQueue.push(curr);
 
-      // actual complicated logic:
+    for (int n = 1; n <= 24; ++n) {
 
-      // priority: build geode-cracking machine
-      if (curr.obsidian >= bp.geodeCostObsidian && curr.ore >= bp.geodeCostOre) {
-        curr.ore -= bp.geodeCostOre;
-        curr.obsidian -= bp.geodeCostObsidian;
-        buildGeode = true;
-        cout << "Spend " << bp.geodeCostOre << " ore and " << bp.geodeCostObsidian << " obsidian to start building a geode-cracking robot." << endl;
-      } else {
+      int x = currQueue.size();
 
-        // calculate how many turns until can build each at current rate
-        int currentRateGeode = INT16_MAX;
-        if (curr.obsidianMachine) {
-          currentRateGeode = max((bp.geodeCostOre - curr.ore + curr.oreMachine - 1) / curr.oreMachine,
-                                 (bp.geodeCostObsidian - curr.obsidian + curr.obsidianMachine - 1) / curr.obsidianMachine);
+      int bestSoFar = 0;
 
-        }
-        int currentRateObsidian = INT16_MAX;
-        if (curr.clayMachine) {
-          currentRateObsidian = max((bp.obsidianCostOre - curr.ore + curr.oreMachine - 1) / curr.oreMachine,
-              (bp.obsidianCostClay - curr.clay + curr.clayMachine - 1) / curr.clayMachine);
-        }
-        int currentRateClay = (bp.clayCost - curr.ore + curr.oreMachine - 1) / curr.oreMachine;
-        int currentRateOre = (bp.oreCost - curr.ore + curr.oreMachine - 1) / curr.oreMachine;
+      while (!currQueue.empty()) {
+        available curr = currQueue.front();
+        currQueue.pop();
 
-        if (currentRateObsidian <= 0 && bp.geodeCostObsidian > curr.obsidianMachine) {
-          int newRateGeode = max((bp.geodeCostOre - (curr.ore - bp.obsidianCostOre) + curr.oreMachine - 1) / curr.oreMachine,
-                                 (bp.geodeCostObsidian - curr.obsidian + (curr.obsidianMachine + 1) - 1) / (curr.obsidianMachine + 1));
-          if (newRateGeode <= currentRateGeode) {
-            curr.ore -= bp.obsidianCostOre;
-            curr.clay -= bp.obsidianCostClay;
-            buildObsidian = true;
-            cout << "Spend " << bp.obsidianCostOre << " ore and " << bp.obsidianCostClay << " clay to start building an obsidian-collecting robot." << endl;
-          }
-        }
+        bool buildGeode = false;
+        bool buildObsidian = false;
+        bool buildClay = false;
+        bool buildOre = false;
 
-        if (currentRateOre <= 0 && !buildObsidian && !buildClay && maxOreRequired > curr.oreMachine) {
-          int newRateGeode = INT16_MAX;
-          if (curr.obsidianMachine) {
-            newRateGeode = max((bp.geodeCostOre - (curr.ore - bp.oreCost) + (curr.oreMachine + 1) - 1) / (curr.oreMachine + 1),
-                               (bp.geodeCostObsidian - curr.obsidian + curr.obsidianMachine - 1) / curr.obsidianMachine);
+        if (curr.ore >= bp.oreCost && curr.oreMachine < maxOreRequired) buildOre = true;
+        if (curr.ore >= bp.clayCost && curr.clayMachine < bp.obsidianCostClay) buildClay = true;
+        if (curr.ore >= bp.obsidianCostOre && curr.clay >= bp.obsidianCostClay && curr.obsidianMachine < bp.geodeCostObsidian) buildObsidian = true;
+        if (curr.ore >= bp.geodeCostOre && curr.obsidian >= bp.geodeCostObsidian) buildGeode = true;
 
-          }
-          int newRateObsidian = INT16_MAX;
-          if (curr.clayMachine) {
-            newRateObsidian = max((bp.obsidianCostOre - (curr.ore - bp.oreCost) + (curr.oreMachine + 1) - 1) / (curr.oreMachine + 1),
-                                  (bp.obsidianCostClay - curr.clay + curr.clayMachine - 1) / curr.clayMachine);
-          }
-          int newRateClay = (bp.clayCost - (curr.ore - bp.oreCost) + (curr.oreMachine + 1) - 1) / (curr.oreMachine + 1);
-
-          if (newRateGeode < currentRateGeode
-              || (newRateGeode == currentRateGeode && newRateObsidian <= currentRateObsidian)
-              || (newRateGeode == currentRateGeode && newRateObsidian == currentRateObsidian && newRateClay <= currentRateClay)) {
-            curr.ore -= bp.oreCost;
-            buildOre = true;
-            cout << "Spend " << bp.oreCost << " ore to start building a ore-collecting robot." << endl;
-          }
-        }
-        if (currentRateClay <= 0 && !buildObsidian && !buildOre && bp.obsidianCostClay > curr.clayMachine) {
-
-          int newRateGeode = INT16_MAX;
-          if (curr.obsidianMachine) {
-            newRateGeode = max((bp.geodeCostOre - (curr.ore - bp.clayCost) + curr.oreMachine) - 1 / curr.oreMachine,
-                               (bp.geodeCostObsidian - curr.obsidian + curr.obsidianMachine) - 1 / curr.obsidianMachine);
-          }
-          int newRateObsidian = max((bp.obsidianCostOre - (curr.ore - bp.clayCost) + curr.oreMachine - 1) / curr.oreMachine,
-                                    (bp.obsidianCostClay - curr.clay + (curr.clayMachine + 1) - 1) / (curr.clayMachine + 1));
-
-          if (newRateGeode < currentRateGeode
-          || (newRateGeode == currentRateGeode && newRateObsidian <= currentRateObsidian)) {
-            curr.ore -= bp.clayCost;
-            buildClay = true;
-            cout << "Spend " << bp.clayCost << " ore to start building a clay-collecting robot." << endl;
-          }
-        }
-
-      }
-
-      if (curr.oreMachine) {
         curr.ore += curr.oreMachine;
-        cout << curr.oreMachine << " ore-collecting robot collects " << curr.oreMachine << " ore; you now have " << curr.ore << " ore." << endl;
-      }
-      if (curr.clayMachine) {
         curr.clay += curr.clayMachine;
-        cout << curr.clayMachine << " clay-collecting robot collects " << curr.clayMachine << " clay; you now have " << curr.clay << " clay." << endl;
-      }
-      if (curr.obsidianMachine) {
         curr.obsidian += curr.obsidianMachine;
-        cout << curr.obsidianMachine << " obsidian-collecting robot collects " << curr.obsidianMachine << " obsidian; you now have " << curr.obsidian << " obsidian." << endl;
-      }
-      if (curr.geodeMachine) {
         curr.geode += curr.geodeMachine;
-        cout << curr.geodeMachine << " geode-collecting robot cracks " << curr.geodeMachine << " geode; you now have " << curr.geode << " open geode." << endl;
+
+        bestSoFar = max(bestSoFar, curr.geode);
+
+        if (bestSoFar > curr.geode) continue;
+
+//        if (!seen[curr]) {
+//          seen[curr] = true;
+          next.push(curr);
+//        }
+
+        if (buildOre) {
+          available upcoming = curr;
+          upcoming.ore -= bp.oreCost;
+          upcoming.oreMachine++;
+//          if (!seen[upcoming]) {
+//            seen[upcoming] = true;
+            next.push(upcoming);
+//          }
+        }
+        if (buildClay) {
+          available upcoming = curr;
+          upcoming.ore -= bp.clayCost;
+          upcoming.clayMachine++;
+//          if (!seen[upcoming]) {
+//            seen[upcoming] = true;
+            next.push(upcoming);
+//          }
+        }
+        if (buildObsidian) {
+          available upcoming = curr;
+          upcoming.ore -= bp.obsidianCostOre;
+          upcoming.clay -= bp.obsidianCostClay;
+          upcoming.obsidianMachine++;
+//          if (!seen[upcoming]) {
+//            seen[upcoming] = true;
+            next.push(upcoming);
+//          }
+        }
+        if (buildGeode) {
+          available upcoming = curr;
+          upcoming.ore -= bp.geodeCostOre;
+          upcoming.obsidian -= bp.geodeCostObsidian;
+          upcoming.geodeMachine++;
+//          if (!seen[upcoming]) {
+//            seen[upcoming] = true;
+            next.push(upcoming);
+//          }
+        }
       }
 
-      // builds machine
-      if (buildGeode) {
-        curr.geodeMachine++;
-        cout << "The new geode-cracking robot is ready; you now have " << curr.geodeMachine << " of them." << endl;
-      }
-      if (buildObsidian) {
-        curr.obsidianMachine++;
-        cout << "The new obsidian-collecting robot is ready; you now have " << curr.obsidianMachine << " of them." << endl;
-      }
-      if (buildClay) {
-        curr.clayMachine++;
-        cout << "The new clay-collecting robot is ready; you now have " << curr.clayMachine << " of them." << endl;
-      }
-      if (buildOre) {
-        curr.oreMachine++;
-        cout << "The new ore-collecting robot is ready; you now have " << curr.oreMachine << " of them." << endl;
-      }
-
-      cout << endl;
+      swap(currQueue, next);
+//      seen.clear();
     }
 
-    cout << "ID: " << bp.id << " Geodes: " << curr.geode << " Quality Number: " << bp.id * curr.geode << endl;
-    acc += bp.id * curr.geode;
+    while (!currQueue.empty()) {
+      available curr = currQueue.front();
+      currQueue.pop();
+
+      maxGeode = max(maxGeode, curr.geode);
+    }
+
+    cout << "ID: " << bp.id << " Geodes: " << maxGeode << " Quality Number: " << bp.id * maxGeode << endl;
+    acc += bp.id * maxGeode;
 
   }
 
