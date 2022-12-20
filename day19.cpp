@@ -7,6 +7,8 @@ using namespace std;
 #include <map>
 #include <set>
 #include <vector>
+//#include <cstdlib>
+#include <random>
 #include <cmath>
 #include <queue>
 #include <unordered_map>
@@ -45,6 +47,8 @@ struct available {
   }
 };
 
+int calculateNextMinute(available curr, int minute, map<int, int> &bestSoFar, int maxOreRequired, blueprint &bp);
+int calculatePossible(const blueprint &bp, int minutes);
 namespace std {
 template<>
 struct hash<available> {
@@ -84,114 +88,157 @@ int main() {
   }
 
   int acc = 0;
+  int multi = 1;
 
+  int x = 0;
   for (auto &bp : blueprints) {
-    available curr;
-
-    int maxOreRequired = bp.oreCost;
-    maxOreRequired = max(maxOreRequired, bp.clayCost);
-    maxOreRequired = max(maxOreRequired, bp.obsidianCostOre);
-    maxOreRequired = max(maxOreRequired, bp.geodeCostOre);
 
     int maxGeode = 0;
 
-    queue<available> currQueue;
-    queue<available> next;
-//    unordered_map<available, bool> seen;
+    for (int i = 0; i < 100000; i++) {
+      int temp = calculatePossible(bp, 24);
 
-    currQueue.push(curr);
-
-    for (int n = 1; n <= 24; ++n) {
-
-      int x = currQueue.size();
-
-      int bestSoFar = 0;
-
-      while (!currQueue.empty()) {
-        available curr = currQueue.front();
-        currQueue.pop();
-
-        bool buildGeode = false;
-        bool buildObsidian = false;
-        bool buildClay = false;
-        bool buildOre = false;
-
-        if (curr.ore >= bp.oreCost && curr.oreMachine < maxOreRequired) buildOre = true;
-        if (curr.ore >= bp.clayCost && curr.clayMachine < bp.obsidianCostClay) buildClay = true;
-        if (curr.ore >= bp.obsidianCostOre && curr.clay >= bp.obsidianCostClay && curr.obsidianMachine < bp.geodeCostObsidian) buildObsidian = true;
-        if (curr.ore >= bp.geodeCostOre && curr.obsidian >= bp.geodeCostObsidian) buildGeode = true;
-
-        curr.ore += curr.oreMachine;
-        curr.clay += curr.clayMachine;
-        curr.obsidian += curr.obsidianMachine;
-        curr.geode += curr.geodeMachine;
-
-        bestSoFar = max(bestSoFar, curr.geode);
-
-        if (bestSoFar > curr.geode) continue;
-
-//        if (!seen[curr]) {
-//          seen[curr] = true;
-          next.push(curr);
-//        }
-
-        if (buildOre) {
-          available upcoming = curr;
-          upcoming.ore -= bp.oreCost;
-          upcoming.oreMachine++;
-//          if (!seen[upcoming]) {
-//            seen[upcoming] = true;
-            next.push(upcoming);
-//          }
-        }
-        if (buildClay) {
-          available upcoming = curr;
-          upcoming.ore -= bp.clayCost;
-          upcoming.clayMachine++;
-//          if (!seen[upcoming]) {
-//            seen[upcoming] = true;
-            next.push(upcoming);
-//          }
-        }
-        if (buildObsidian) {
-          available upcoming = curr;
-          upcoming.ore -= bp.obsidianCostOre;
-          upcoming.clay -= bp.obsidianCostClay;
-          upcoming.obsidianMachine++;
-//          if (!seen[upcoming]) {
-//            seen[upcoming] = true;
-            next.push(upcoming);
-//          }
-        }
-        if (buildGeode) {
-          available upcoming = curr;
-          upcoming.ore -= bp.geodeCostOre;
-          upcoming.obsidian -= bp.geodeCostObsidian;
-          upcoming.geodeMachine++;
-//          if (!seen[upcoming]) {
-//            seen[upcoming] = true;
-            next.push(upcoming);
-//          }
-        }
-      }
-
-      swap(currQueue, next);
-//      seen.clear();
+      maxGeode = max(maxGeode,  temp);
     }
+    if (x < 3) {
+      int maxGeode32 = 0;
+      for (int i = 0; i < 5000000; i++) {
+        int temp = calculatePossible(bp, 32);
 
-    while (!currQueue.empty()) {
-      available curr = currQueue.front();
-      currQueue.pop();
-
-      maxGeode = max(maxGeode, curr.geode);
+        maxGeode32 = max(maxGeode32,  temp);
+      }
+      multi *= maxGeode32;
+      cout << "32: " << maxGeode32 << " ";
+      x++;
     }
 
     cout << "ID: " << bp.id << " Geodes: " << maxGeode << " Quality Number: " << bp.id * maxGeode << endl;
+
     acc += bp.id * maxGeode;
 
   }
 
   cout << "Part 1: " << acc << endl;
+  cout << "Part 2: " << multi << endl;
 
   return 0;
+}
+int calculatePossible(const blueprint &bp, int minutes) {
+  available curr;
+
+  for (int i = 1; i <= minutes; ++i) {
+
+//    int random = rand() % 100;
+    random_device rd;
+    int random = rd() % 100;
+
+    bool buildGeode = false;
+    bool buildObsidian = false;
+    bool buildClay = false;
+    bool buildOre = false;
+
+    // actual complicated logic:
+
+    if (curr.ore >= bp.geodeCostOre && curr.obsidian >= bp.geodeCostObsidian) buildGeode = true;
+    if (!buildGeode && curr.ore >= bp.obsidianCostOre && curr.clay >= bp.obsidianCostClay && random <= 80) buildObsidian = true;
+    if (!buildGeode && !buildObsidian && curr.ore >= bp.clayCost && random <= 50) buildClay = true;
+    if (!buildGeode && !buildObsidian && !buildClay && curr.ore >= bp.oreCost && random <= 60) buildOre = true;
+
+    if (curr.oreMachine) {
+      curr.ore += curr.oreMachine;
+    }
+    if (curr.clayMachine) {
+      curr.clay += curr.clayMachine;
+    }
+    if (curr.obsidianMachine) {
+      curr.obsidian += curr.obsidianMachine;
+    }
+    if (curr.geodeMachine) {
+      curr.geode += curr.geodeMachine;
+    }
+
+    // builds machine
+    if (buildGeode) {
+      curr.geodeMachine++;
+      curr.obsidian -= bp.geodeCostObsidian;
+      curr.ore -= bp.geodeCostOre;
+    }
+    if (buildObsidian) {
+      curr.obsidianMachine++;
+      curr.clay -= bp.obsidianCostClay;
+      curr.ore -= bp.obsidianCostOre;
+    }
+    if (buildClay) {
+      curr.clayMachine++;
+      curr.ore -= bp.clayCost;
+    }
+    if (buildOre) {
+      curr.oreMachine++;
+      curr.ore -= bp.oreCost;
+    }
+
+  }
+
+  return curr.geode;
+}
+int calculateNextMinute(available curr, int minute, map<int, int> &bestSoFar, const int maxOreRequired, blueprint &bp) {
+
+  if (minute == 24) {
+    bestSoFar[24] = max(bestSoFar[24], curr.geode);
+    return curr.geode;
+  }
+
+  bool buildGeode = false;
+  bool buildObsidian = false;
+  bool buildClay = false;
+  bool buildOre = false;
+
+  if (curr.ore >= bp.oreCost && curr.oreMachine < maxOreRequired) buildOre = true;
+  if (curr.ore >= bp.clayCost && curr.clayMachine < bp.obsidianCostClay) buildClay = true;
+  if (curr.ore >= bp.obsidianCostOre && curr.clay >= bp.obsidianCostClay && curr.obsidianMachine < bp.geodeCostObsidian) buildObsidian = true;
+  if (curr.ore >= bp.geodeCostOre && curr.obsidian >= bp.geodeCostObsidian) buildGeode = true;
+
+  curr.ore += curr.oreMachine;
+  curr.clay += curr.clayMachine;
+  curr.obsidian += curr.obsidianMachine;
+  curr.geode += curr.geodeMachine;
+
+  bestSoFar[minute] = max(bestSoFar[minute], curr.geode);
+
+  int remainingTime = 24 - minute;
+  if (curr.geode + (remainingTime)*(remainingTime + 1)/2 < bestSoFar[24]) return -1;
+
+  int maxThisLevel = 0;
+
+  if (buildGeode) {
+    available upcoming = curr;
+    upcoming.ore -= bp.geodeCostOre;
+    upcoming.obsidian -= bp.geodeCostObsidian;
+    upcoming.geodeMachine++;
+    return calculateNextMinute(upcoming, minute+1, bestSoFar, maxOreRequired, bp);
+  } else {
+    maxThisLevel = max(maxThisLevel, calculateNextMinute(curr, minute+1, bestSoFar, maxOreRequired, bp));
+
+    if (buildOre) {
+      available upcoming = curr;
+      upcoming.ore -= bp.oreCost;
+      upcoming.oreMachine++;
+      maxThisLevel = max(maxThisLevel, calculateNextMinute(upcoming, minute+1, bestSoFar, maxOreRequired, bp));
+    }
+    if (buildClay) {
+      available upcoming = curr;
+      upcoming.ore -= bp.clayCost;
+      upcoming.clayMachine++;
+      maxThisLevel = max(maxThisLevel, calculateNextMinute(upcoming, minute+1, bestSoFar, maxOreRequired, bp));
+    }
+    if (buildObsidian) {
+      available upcoming = curr;
+      upcoming.ore -= bp.obsidianCostOre;
+      upcoming.clay -= bp.obsidianCostClay;
+      upcoming.obsidianMachine++;
+      maxThisLevel = max(maxThisLevel, calculateNextMinute(upcoming, minute+1, bestSoFar, maxOreRequired, bp));
+    }
+  }
+
+  return maxThisLevel;
 }
