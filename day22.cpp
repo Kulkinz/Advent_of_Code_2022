@@ -190,5 +190,193 @@ int main() {
 
   cout << "Part 1: " << (1000 * (position.second+1)) + (4 * (position.first+1)) + heading << endl;
 
+  map<pair<int,int>, pair<int,int>> correspondingUp;
+  map<pair<int,int>, pair<int,int>> correspondingDown;
+  map<pair<int,int>, pair<int,int>> correspondingLeft;
+  map<pair<int,int>, pair<int,int>> correspondingRight;
+  map<pair<int,int>, int> correspondingUpHeading;
+  map<pair<int,int>, int> correspondingDownHeading;
+  map<pair<int,int>, int> correspondingLeftHeading;
+  map<pair<int,int>, int> correspondingRightHeading;
+  int hardCodeX1 = 0;
+  int hardCodeY1 = 0;
+  int hardCodeX2 = 0;
+  int hardCodeY2 = 0;
+
+  // 1 - 6
+  hardCodeX1 = 100;
+  hardCodeY1 = 0;
+  hardCodeX2 = 0;
+  hardCodeY2 = 199;
+  for (int i = 0; i < 50; i++) {
+    correspondingUp[make_pair(hardCodeX1 + i, hardCodeY1)] = make_pair(hardCodeX2 + i, hardCodeY2);
+    correspondingUpHeading[make_pair(hardCodeX1 + i, hardCodeY1)] = 3;
+    correspondingDown[make_pair(hardCodeX2 + i, hardCodeY2)] = make_pair(hardCodeX1 + i, hardCodeY1);
+    correspondingDownHeading[make_pair(hardCodeX2 + i, hardCodeY2)] = 1;
+  }
+
+  // 1 - 4
+  hardCodeX1 = 149;
+  hardCodeY1 = 0;
+  hardCodeX2 = 99;
+  hardCodeY2 = 149;
+  for (int i = 0; i < 50; i++) {
+    correspondingRight[make_pair(hardCodeX1, hardCodeY1 + i)] = make_pair(hardCodeX2, hardCodeY2 - i);
+    correspondingRightHeading[make_pair(hardCodeX1, hardCodeY1 + i)] = 2;
+    correspondingRight[make_pair(hardCodeX2, hardCodeY2 - i)] = make_pair(hardCodeX1, hardCodeY1 + i);
+    correspondingRightHeading[make_pair(hardCodeX2, hardCodeY2 - i)] = 2;
+  }
+
+  // 1 - 3
+  hardCodeX1 = 100;
+  hardCodeY1 = 49;
+  hardCodeX2 = 99;
+  hardCodeY2 = 50;
+  for (int i = 0; i < 50; i++) {
+    correspondingDown[make_pair(hardCodeX1 + i, hardCodeY1)] = make_pair(hardCodeX2, hardCodeY2 + i);
+    correspondingDownHeading[make_pair(hardCodeX1 + i, hardCodeY1)] = 2;
+    correspondingRight[make_pair(hardCodeX2, hardCodeY2 + i)] = make_pair(hardCodeX1 + i, hardCodeY1);
+    correspondingRightHeading[make_pair(hardCodeX2, hardCodeY2 + i)] = 3;
+  }
+
+
+  // 2 - 6
+  hardCodeX1 = 50;
+  hardCodeY1 = 0;
+  hardCodeX2 = 0;
+  hardCodeY2 = 150;
+  for (int i = 0; i < 50; i++) {
+    correspondingUp[make_pair(hardCodeX1 + i, hardCodeY1)] = make_pair(hardCodeX2, hardCodeY2 + i);
+    correspondingUpHeading[make_pair(hardCodeX1 + i, hardCodeY1)] = 0;
+    correspondingLeft[make_pair(hardCodeX2, hardCodeY2 + i)] = make_pair(hardCodeX1 + i, hardCodeY1);
+    correspondingLeftHeading[make_pair(hardCodeX2, hardCodeY2 + i)] = 1;
+  }
+
+  // 2 - 5
+  hardCodeX1 = 50;
+  hardCodeY1 = 0;
+  hardCodeX2 = 0;
+  hardCodeY2 = 149;
+  for (int i = 0; i < 50; i++) {
+    correspondingLeft[make_pair(hardCodeX1, hardCodeY1 + i)] = make_pair(hardCodeX2, hardCodeY2 - i);
+    correspondingLeftHeading[make_pair(hardCodeX1, hardCodeY1 + i)] = 0;
+    correspondingLeft[make_pair(hardCodeX2, hardCodeY2 - i)] = make_pair(hardCodeX1, hardCodeY1 + i);
+    correspondingLeftHeading[make_pair(hardCodeX2, hardCodeY2 - i)] = 0;
+  }
+
+  // 3 - 5
+  hardCodeX1 = 50;
+  hardCodeY1 = 50;
+  hardCodeX2 = 0;
+  hardCodeY2 = 100;
+  for (int i = 0; i < 50; i++) {
+    correspondingLeft[make_pair(hardCodeX1, hardCodeY1 + i)] = make_pair(hardCodeX2 + i, hardCodeY2);
+    correspondingLeftHeading[make_pair(hardCodeX1, hardCodeY1 + i)] = 1;
+    correspondingUp[make_pair(hardCodeX2 + i, hardCodeY2)] = make_pair(hardCodeX1, hardCodeY1 + i);
+    correspondingUpHeading[make_pair(hardCodeX2 + i, hardCodeY2)] = 0;
+  }
+
+
+  // 4 - 6
+  hardCodeX1 = 50;
+  hardCodeY1 = 149;
+  hardCodeX2 = 49;
+  hardCodeY2 = 150;
+  for (int i = 0; i < 50; i++) {
+    correspondingDown[make_pair(hardCodeX1 + i, hardCodeY1)] = make_pair(hardCodeX2, hardCodeY2 + i);
+    correspondingDownHeading[make_pair(hardCodeX1 + i, hardCodeY1)] = 2;
+    correspondingRight[make_pair(hardCodeX2, hardCodeY2 + i)] = make_pair(hardCodeX1 + i, hardCodeY1);
+    correspondingRightHeading[make_pair(hardCodeX2, hardCodeY2 + i)] = 3;
+  }
+
+
+  position = make_pair(start, 0);
+  heading = 0;
+
+  for (auto &it : instructions) {
+
+    int distance;
+    int rotate;
+
+    if (it[it.length()-1] == 'R') {
+      distance = stoi(it.substr(0,it.length()-1));
+      rotate = 1;
+    } else if (it[it.length()-1] == 'L') {
+      distance = stoi(it.substr(0,it.length()-1));
+      rotate = -1;
+    } else {
+      distance = stoi(it);
+      rotate = 0;
+    }
+
+
+    for (int i = 0; i < distance; i++) {
+
+
+      pair<int,int> nextPosition;
+      int nextHeader = heading;
+      switch (heading) {
+        case 0: // right
+          nextPosition = make_pair(position.first + 1, position.second);
+          if (nextPosition.first == width || mapData[position.second][nextPosition.first] == ' ') {
+            nextPosition = correspondingRight[position];
+            nextHeader = correspondingRightHeading[position];
+          }
+
+          if (mapData[nextPosition.second][nextPosition.first] == '.') {
+            position = nextPosition;
+            heading = nextHeader;
+          }
+
+          break;
+        case 1: // down
+          nextPosition = make_pair(position.first, position.second + 1);
+          if (nextPosition.second == height || mapData[nextPosition.second][position.first] == ' ') {
+            nextPosition = correspondingDown[position];
+            nextHeader = correspondingDownHeading[position];
+          }
+
+          if (mapData[nextPosition.second][nextPosition.first] == '.') {
+            position = nextPosition;
+            heading = nextHeader;
+          }
+
+          break;
+        case 2: // left
+          nextPosition = make_pair(position.first - 1, position.second);
+          if (nextPosition.first == -1 || mapData[position.second][nextPosition.first] == ' ') {
+            nextPosition = correspondingLeft[position];
+            nextHeader = correspondingLeftHeading[position];
+          }
+
+          if (mapData[nextPosition.second][nextPosition.first] == '.') {
+            position = nextPosition;
+            heading = nextHeader;
+          }
+
+          break;
+        case 3: // up
+          nextPosition = make_pair(position.first, position.second - 1);
+          if (nextPosition.second == -1 || mapData[nextPosition.second][position.first] == ' ') {
+            nextPosition = correspondingUp[position];
+            nextHeader = correspondingUpHeading[position];
+          }
+
+          if (mapData[nextPosition.second][nextPosition.first] == '.') {
+            position = nextPosition;
+            heading = nextHeader;
+          }
+
+          break;
+      }
+    }
+
+    heading += rotate;
+    heading = (heading == -1) ? 3 : (heading == 4) ? 0 : heading;
+
+  }
+
+  cout << "Part 2: " << (1000 * (position.second+1)) + (4 * (position.first+1)) + heading << endl;
+
   return 0;
 }
